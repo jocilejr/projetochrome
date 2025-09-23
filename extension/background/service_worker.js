@@ -64,6 +64,7 @@ async function callTranscriptionApi(blob, mimeType) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+create-whatsapp-audio-transcription-extension-2ookig
   if (!message || !message.action) {
     return;
   }
@@ -81,6 +82,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action !== 'transcribe-audio') {
+
     return;
   }
 
@@ -101,6 +103,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return true;
 });
+create-whatsapp-audio-transcription-extension-2ookig
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage(() => {
@@ -109,3 +112,4 @@ chrome.action.onClicked.addListener(() => {
     }
   });
 });
+

@@ -67,6 +67,7 @@
     }, 4000);
   }
 
+create-whatsapp-audio-transcription-extension-2ookig
   function openOptionsPage() {
     try {
       if (typeof chrome === 'undefined' || !chrome.runtime) {
@@ -91,6 +92,7 @@
   }
 
   let promptedForApiKey = false;
+
 
   async function handleClick() {
     try {
@@ -141,6 +143,7 @@
       }
 
       showToast(`Transcrição pronta${clipboardMessage}: ${transcript}`, false);
+create-whatsapp-audio-transcription-extension-2ookig
       promptedForApiKey = false;
     } catch (error) {
       console.error('Erro ao transcrever áudio:', error);
@@ -153,6 +156,7 @@
           openOptionsPage();
         }, 300);
       }
+
     } finally {
       button.disabled = false;
       button.textContent = 'Transcrever áudio';
@@ -177,10 +181,12 @@
   }
 
   button.addEventListener('click', handleClick);
+create-whatsapp-audio-transcription-extension-2ookig
   button.addEventListener('contextmenu', (event) => {
     event.preventDefault();
     openOptionsPage();
   });
+
 
   document.body.appendChild(button);
   document.body.appendChild(toast);
