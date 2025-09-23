@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "description": "Transcreve rapidamente os áudios da conversa ativa no WhatsApp Web usando a API da OpenAI.",
   "permissions": ["scripting", "storage", "downloads"],
-  "host_permissions": ["https://web.whatsapp.com/*"],
+create-whatsapp-audio-transcription-extension-e572ut
+  "host_permissions": ["https://web.whatsapp.com/*", "https://api.openai.com/*"],
+
   "background": {
     "service_worker": "background/service_worker.js"
   },
