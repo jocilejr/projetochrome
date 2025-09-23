@@ -64,7 +64,25 @@ async function callTranscriptionApi(blob, mimeType) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || message.action !== 'transcribe-audio') {
+create-whatsapp-audio-transcription-extension-2ookig
+  if (!message || !message.action) {
+    return;
+  }
+
+  if (message.action === 'open-options') {
+    chrome.runtime.openOptionsPage(() => {
+      if (chrome.runtime.lastError) {
+        console.error('Não foi possível abrir a página de opções:', chrome.runtime.lastError);
+        sendResponse({ success: false, error: 'Não foi possível abrir as opções da extensão.' });
+        return;
+      }
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+
+  if (message.action !== 'transcribe-audio') {
+
     return;
   }
 
@@ -85,3 +103,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return true;
 });
+create-whatsapp-audio-transcription-extension-2ookig
+
+chrome.action.onClicked.addListener(() => {
+  chrome.runtime.openOptionsPage(() => {
+    if (chrome.runtime.lastError) {
+      console.error('Erro ao abrir opções ao clicar no ícone:', chrome.runtime.lastError);
+    }
+  });
+});
+

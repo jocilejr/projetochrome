@@ -67,6 +67,33 @@
     }, 4000);
   }
 
+create-whatsapp-audio-transcription-extension-2ookig
+  function openOptionsPage() {
+    try {
+      if (typeof chrome === 'undefined' || !chrome.runtime) {
+        return;
+      }
+
+      if (typeof chrome.runtime.openOptionsPage === 'function') {
+        chrome.runtime.openOptionsPage(() => {
+          if (chrome.runtime.lastError) {
+            console.error('Falha ao abrir opções da extensão:', chrome.runtime.lastError);
+          }
+        });
+        return;
+      }
+
+      if (typeof chrome.runtime.getURL === 'function') {
+        window.open(chrome.runtime.getURL('options.html'), '_blank', 'noopener');
+      }
+    } catch (error) {
+      console.error('Erro ao abrir as opções da extensão:', error);
+    }
+  }
+
+  let promptedForApiKey = false;
+
+
   async function handleClick() {
     try {
       button.disabled = true;
@@ -116,9 +143,20 @@
       }
 
       showToast(`Transcrição pronta${clipboardMessage}: ${transcript}`, false);
+create-whatsapp-audio-transcription-extension-2ookig
+      promptedForApiKey = false;
     } catch (error) {
       console.error('Erro ao transcrever áudio:', error);
-      showToast(error.message || 'Erro inesperado durante a transcrição.', true);
+      const errorMessage = error.message || 'Erro inesperado durante a transcrição.';
+      showToast(errorMessage, true);
+
+      if (!promptedForApiKey && errorMessage.toLowerCase().includes('chave')) {
+        promptedForApiKey = true;
+        setTimeout(() => {
+          openOptionsPage();
+        }, 300);
+      }
+
     } finally {
       button.disabled = false;
       button.textContent = 'Transcrever áudio';
@@ -143,6 +181,12 @@
   }
 
   button.addEventListener('click', handleClick);
+create-whatsapp-audio-transcription-extension-2ookig
+  button.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    openOptionsPage();
+  });
+
 
   document.body.appendChild(button);
   document.body.appendChild(toast);
