@@ -2,38 +2,21 @@
   "manifest_version": 3,
   "name": "WhatsApp Audio Transcriber",
   "version": "1.0.0",
-create-whatsapp-audio-transcription-extension-2ookig
-  "description": "Transcreve rapidamente os audios da conversa ativa no WhatsApp Web usando a API da OpenAI.",
-  "permissions": [
-    "scripting",
-    "storage",
-    "downloads"
-  ],
-  "host_permissions": [
-    "https://web.whatsapp.com/*",
-    "https://api.openai.com/*"
-  ],
-
+  "description": "Transcreve rapidamente os áudios da conversa ativa no WhatsApp Web usando a API da OpenAI.",
+  "permissions": ["scripting", "storage", "downloads"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
   "background": {
     "service_worker": "background/service_worker.js"
   },
   "options_page": "options.html",
   "content_scripts": [
     {
-create-whatsapp-audio-transcription-extension-2ookig
-      "matches": [
-        "https://web.whatsapp.com/*"
-      ],
-      "js": [
-        "content-script.js"
-      ],
-
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content-script.js"],
       "run_at": "document_idle"
     }
   ],
   "action": {
-create-whatsapp-audio-transcription-extension-2ookig
-    "default_title": "Transcrever ultimo audio"
-
+    "default_title": "Transcrever último áudio"
   }
 }
