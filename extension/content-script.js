@@ -67,13 +67,50 @@
     }, 4000);
   }
 
+  function getAudioSource(audio) {
+    if (!audio) {
+      return '';
+    }
+
+    return audio.src || audio.currentSrc || audio.querySelector('source')?.src || '';
+  }
+
+  function inferMimeTypeFromUrl(url) {
+    if (!url) {
+      return '';
+    }
+
+    try {
+      const { pathname } = new URL(url, window.location.href);
+      const extension = pathname.split('.').pop()?.toLowerCase();
+
+      switch (extension) {
+        case 'mp3':
+          return 'audio/mpeg';
+        case 'ogg':
+        case 'oga':
+          return 'audio/ogg';
+        case 'wav':
+          return 'audio/wav';
+        case 'm4a':
+        case 'mp4':
+          return 'audio/mp4';
+        default:
+          return '';
+      }
+    } catch (error) {
+      console.warn('Não foi possível inferir o MIME type a partir da URL:', error);
+      return '';
+    }
+  }
+
   async function handleClick() {
     try {
       button.disabled = true;
       button.textContent = 'Buscando áudio…';
 
       const audios = Array.from(document.querySelectorAll('audio'))
-        .filter((audio) => Boolean(audio.src));
+        .filter((audio) => Boolean(getAudioSource(audio)));
       const lastAudio = audios[audios.length - 1];
 
       if (!lastAudio) {
@@ -81,8 +118,15 @@
         return;
       }
 
+      const sourceUrl = getAudioSource(lastAudio);
+
+      if (!sourceUrl) {
+        showToast('Não foi possível determinar a origem do áudio selecionado.', true);
+        return;
+      }
+
       button.textContent = 'Baixando áudio…';
-      const response = await fetch(lastAudio.src);
+      const response = await fetch(sourceUrl);
       if (!response.ok) {
         throw new Error('Falha ao baixar o áudio.');
       }
@@ -95,7 +139,7 @@
       button.textContent = 'Enviando para transcrição…';
       const result = await sendMessage({
         action: 'transcribe-audio',
-        mimeType: blob.type || lastAudio.type || 'audio/ogg',
+        mimeType: blob.type || lastAudio.type || inferMimeTypeFromUrl(sourceUrl) || 'audio/ogg',
         blob,
       });
 
