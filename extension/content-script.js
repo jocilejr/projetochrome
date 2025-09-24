@@ -104,6 +104,18 @@
     }
   }
 
+  function resolveMessageContainer(element) {
+    if (!element) {
+      return null;
+    }
+
+    if (element.matches?.('[data-testid="message-container"]')) {
+      return element;
+    }
+
+    return element.closest?.('[data-testid="message-container"]') || null;
+  }
+
   function findLatestVoiceMessageContainer() {
     const containerSelectors = [
       'div[data-testid="audio-playback"]',
@@ -145,8 +157,15 @@
       return Promise.resolve(null);
     }
 
+    const messageContainer = resolveMessageContainer(container);
+
+    if (!messageContainer) {
+      console.error('Não foi possível determinar o container da mensagem para o áudio.');
+      return Promise.resolve(null);
+    }
+
     const searchRoot =
-      container.closest('[data-testid="conversation-panel-messages"]') ?? document;
+      messageContainer.closest('[data-testid="conversation-panel-messages"]') ?? document;
 
     return new Promise((resolve) => {
       const deadline = Date.now() + timeoutMs;
@@ -181,9 +200,19 @@
       };
 
       const findAudioWithSource = () => {
-        const audios = Array.from(searchRoot.querySelectorAll('audio')).filter(
-          (audio) => audio.closest('[data-testid="message-container"]') === container,
-        );
+        const audios = Array.from(searchRoot.querySelectorAll('audio')).filter((audio) => {
+          const audioContainer = audio.closest('[data-testid="message-container"]');
+
+          if (audioContainer) {
+            return (
+              audioContainer === messageContainer ||
+              audioContainer.contains(container) ||
+              audioContainer.contains(messageContainer)
+            );
+          }
+
+          return messageContainer.contains(audio);
+        });
         for (const audio of audios) {
           if (getAudioSource(audio)) {
             return audio;
@@ -259,13 +288,23 @@
           return;
         }
 
-        const playbackButton = findPlaybackButton(voiceMessageContainer);
+        const messageContainer = resolveMessageContainer(voiceMessageContainer);
+
+        if (!messageContainer) {
+          showToast(
+            'Não foi possível identificar a bolha da mensagem. Reproduza o áudio manualmente e tente novamente.',
+            true,
+          );
+          return;
+        }
+
+        const playbackButton = findPlaybackButton(messageContainer);
 
         if (playbackButton) {
           playbackButton.click();
         }
 
-        const awaitedAudio = await waitForAudioSource(voiceMessageContainer);
+        const awaitedAudio = await waitForAudioSource(messageContainer);
         const awaitedSourceUrl = getAudioSource(awaitedAudio);
 
         if (!awaitedSourceUrl) {
