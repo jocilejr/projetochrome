@@ -104,175 +104,25 @@
     }
   }
 
-  function findLatestVoiceMessageContainer() {
-    const containerSelectors = [
-      'div[data-testid="audio-playback"]',
-      'div[data-testid="audio-message"]',
-      'div[role="application"] section[data-testid="message-container"] div[data-testid="audio"]',
-    ];
-
-    const containers = containerSelectors.flatMap((selector) =>
-      Array.from(document.querySelectorAll(selector)),
-    );
-
-    return containers[containers.length - 1] || null;
-  }
-
-  function findPlaybackButton(container) {
-    if (!container) {
-      return null;
-    }
-
-    const buttonSelectors = [
-      'button[data-testid="audio-play"]',
-      'button[data-testid="audio-download"]',
-      'button[aria-label*="Reproduzir"]',
-      'button[aria-label*="Play"]',
-    ];
-
-    for (const selector of buttonSelectors) {
-      const button = container.querySelector(selector);
-      if (button) {
-        return button;
-      }
-    }
-
-    return null;
-  }
-
-  function waitForAudioSource(container, timeoutMs = 10000) {
-    if (!container) {
-      return Promise.resolve(null);
-    }
-
-    return new Promise((resolve) => {
-      const deadline = Date.now() + timeoutMs;
-      let resolved = false;
-      let rafId = null;
-
-      const cleanup = () => {
-        observer.disconnect();
-        if (rafId) {
-          cancelAnimationFrame(rafId);
-          rafId = null;
-        }
-      };
-
-      const finish = (audio) => {
-        if (resolved) {
-          return;
-        }
-        resolved = true;
-
-        if (audio) {
-          try {
-            audio.pause();
-            audio.currentTime = 0;
-          } catch (error) {
-            console.warn('Falha ao pausar áudio automaticamente:', error);
-          }
-        }
-
-        cleanup();
-        resolve(audio || null);
-      };
-
-      const findAudioWithSource = () => {
-        const audios = Array.from(container.querySelectorAll('audio'));
-        for (const audio of audios) {
-          if (getAudioSource(audio)) {
-            return audio;
-          }
-        }
-        return null;
-      };
-
-      const scheduleCheck = () => {
-        if (resolved) {
-          return;
-        }
-
-        rafId = requestAnimationFrame(() => {
-          if (resolved) {
-            return;
-          }
-
-          const audio = findAudioWithSource();
-          if (audio) {
-            finish(audio);
-            return;
-          }
-
-          if (Date.now() >= deadline) {
-            finish(null);
-            return;
-          }
-
-          scheduleCheck();
-        });
-      };
-
-      const observer = new MutationObserver(() => {
-        scheduleCheck();
-      });
-
-      observer.observe(container, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-      });
-
-      const existingAudio = findAudioWithSource();
-      if (existingAudio) {
-        finish(existingAudio);
-        return;
-      }
-
-      scheduleCheck();
-    });
-  }
-
   async function handleClick() {
     try {
       button.disabled = true;
       button.textContent = 'Buscando áudio…';
 
-      const audios = Array.from(document.querySelectorAll('audio')).filter((audio) =>
-        Boolean(getAudioSource(audio)),
-      );
-      let lastAudio = audios[audios.length - 1] || null;
-      let sourceUrl = getAudioSource(lastAudio);
+      const audios = Array.from(document.querySelectorAll('audio'))
+        .filter((audio) => Boolean(getAudioSource(audio)));
+      const lastAudio = audios[audios.length - 1];
 
-      if (!lastAudio || !sourceUrl) {
-        const voiceMessageContainer = findLatestVoiceMessageContainer();
+      if (!lastAudio) {
+        showToast('Nenhum áudio encontrado na conversa atual.', true);
+        return;
+      }
 
-        if (!voiceMessageContainer) {
-          showToast(
-            'Não foi possível localizar uma mensagem de voz recente. Reproduza o áudio manualmente e tente novamente.',
-            true,
-          );
-          return;
-        }
+      const sourceUrl = getAudioSource(lastAudio);
 
-        const playbackButton = findPlaybackButton(voiceMessageContainer);
-
-        if (playbackButton) {
-          playbackButton.click();
-        }
-
-        const awaitedAudio = await waitForAudioSource(voiceMessageContainer);
-        const awaitedSourceUrl = getAudioSource(awaitedAudio);
-
-        if (!awaitedSourceUrl) {
-          showToast(
-            'Não foi possível acessar o áudio automaticamente. Reproduza ou baixe manualmente e tente novamente.',
-            true,
-          );
-          return;
-        }
-
-        lastAudio = awaitedAudio;
-        sourceUrl = awaitedSourceUrl;
+      if (!sourceUrl) {
+        showToast('Não foi possível determinar a origem do áudio selecionado.', true);
+        return;
       }
 
       button.textContent = 'Baixando áudio…';
